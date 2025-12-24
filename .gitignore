@@ -1,0 +1,45 @@
+.gradle/
+build/
+target/
+# Compiled class file
+*.class
+
+# Log file
+*.log
+[Dd]ebug/
+[Rr]elease/
+
+# Package Files
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+
+# Build directory for Maven
+target/
+
+# Build directory for Gradle
+build/
+.gradle/
+
+# IDE-specific files and directories
+
+# Eclipse
+.classpath
+.project
+.settings/
+*.launch
+.idea/ # IntelliJ IDEA
+*.iml    # IntelliJ IDEA module files
+
+# NetBeans
+nbproject/
+*.nbattrs
+
+# VS Code
+.vscode/
+
+# Operating System files
+.DS_Store # macOS
+Thumbs.db # Windows

@@ -1,0 +1,4 @@
+Bundle-Name: site-template-ci-rest
+Bundle-SymbolicName: site.template.ci.rest
+Bundle-Version: 1.0.0
+Liferay-Configuration-Path: /configuration
