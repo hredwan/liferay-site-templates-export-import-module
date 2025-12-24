@@ -1,0 +1,139 @@
+```markdown
+# Liferay Site Template CI/CD Automation
+
+This project provides a custom  REST endpoint deployed as an OSGi component in Liferay DXP. It enables the automated **Export** and **Import** of Site Templates (Layout Set Prototypes) via CI/CD pipelines (e.g., Jenkins, GitLab CI, GitHub Actions), filling a gap where standard APIs often focus on Groups (Sites) rather than Templates.
+
+## ⚠️ Disclaimer & No Support
+
+> **IMPORTANT:**
+>
+> This code is a **Proof of Concept (PoC)** provided "as is". It is **not** an official Liferay product, feature, or supported extension.
+>
+> * **No Support:** There is no official support, warranty, or liability provided for this code.
+> * **Use at your own risk:** You are responsible for testing this extensively in a non-production environment before using it in production.
+> * **Future Compatibility:** Liferay APIs (especially `ExportImportLocalService`) are internal and may change between versions without notice.
+
+
+## Installation
+
+1.  Build and deploy the module:
+    ```bash
+    blade deploy
+    # or
+    ./gradlew deploy
+    ```
+
+## API Reference
+
+All requests must be authenticated (Basic Auth, OAuth2, etc.) using a user with **Administrator** privileges.
+
+### 1. Export a Site Template
+
+Initiates a background task to export the template as a `.lar` file.
+
+* **Method:** `POST`
+* **Path:** `/v1/site-templates/export`
+* **Query Params:**
+    * `templateName`: The exact name of the Site Template (e.g., "Speedwell").
+
+**Response (200 OK):**
+```json
+{
+  "backgroundTaskId": 12345,
+  "layoutCount": 5
+}
+
+```
+
+### 2. Check Background Task Status
+
+Since exports/imports are asynchronous, use this to poll for completion.
+
+* **Method:** `GET`
+* **Path:** `/v1/background-tasks/{backgroundTaskId}/status`
+
+**Response:**
+
+```json
+{
+  "status": 0,         // 0 = Success, 1 = In Progress, 4 = Failed
+  "completed": true,
+  "statusMessage": ""
+}
+
+```
+
+### 3. Download Exported LAR
+
+Once the export task is `successful` (status 0), download the binary file.
+
+* **Method:** `GET`
+* **Path:** `/v1/background-tasks/{backgroundTaskId}/lar`
+* **Returns:** Binary stream (`application/zip`)
+
+### 4. Import a Site Template
+
+Uploads a `.lar` file and imports it into a Site Template.
+
+* **Method:** `POST`
+* **Path:** `/v1/site-templates/import`
+* **Headers:** `Content-Type: application/octet-stream`
+* **Query Params:**
+* `templateName` (Required): Name of the target Site Template.
+* `createIfMissing` (Default: `false`): Create the template if it doesn't exist.
+* `validate` (Default: `true`): Validates references before importing.
+* `force` (Default: `false`): Proceed with import even if validation finds missing references.
+* `privateLayout` (Default: `true`): Import into Private Pages (true) or Public Pages (false).
+
+
+* **Body:** Binary content of the `.lar` file.
+
+**Response:**
+
+```json
+{
+  "backgroundTaskId": 67890,
+  "templateGroupId": 9999,
+  "validation": {
+      "hasMissingReferences": false
+  }
+}
+
+```
+
+## Example Usage (cURL)
+
+### Step 1: Export from Dev Environment
+
+```bash
+# 1. Trigger Export
+RESPONSE=$(curl -s -u "admin:test" -X POST "http://localhost:8080/o/site-template-ci/v1/site-templates/export?templateName=MyTemplate")
+TASK_ID=$(echo $RESPONSE | jq .backgroundTaskId)
+
+# 2. Poll for completion (simple loop)
+while true; do
+  STATUS=$(curl -s -u "admin:test" "http://localhost:8080/o/site-template-ci/v1/background-tasks/$TASK_ID/status" | jq .status)
+  echo "Current Status: $STATUS"
+  if [ "$STATUS" == "0" ]; then break; fi
+  if [ "$STATUS" == "4" ]; then echo "Failed"; exit 1; fi
+  sleep 2
+done
+
+# 3. Download
+curl -u "admin:test" "http://localhost:8080/o/site-template-ci/v1/background-tasks/$TASK_ID/lar" -o my-template.lar
+
+```
+
+### Step 2: Import to Prod Environment
+
+```bash
+curl -u "admin:prod_pass" \
+     -X POST "http://prod-server/o/site-template-ci/v1/site-templates/import?templateName=MyTemplate&createIfMissing=true&force=true" \
+     --data-binary @my-template.lar \
+     -H "Content-Type: application/octet-stream"
+
+```
+
+```
+
+```
