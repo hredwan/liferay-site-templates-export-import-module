@@ -1,4 +1,4 @@
-```markdown
+
 # Liferay Site Template CI/CD Automation
 
 This project provides a custom  REST endpoint deployed as an OSGi component in Liferay DXP. It enables the automated **Export** and **Import** of Site Templates (Layout Set Prototypes) via CI/CD pipelines (e.g., Jenkins, GitLab CI, GitHub Actions), filling a gap where standard APIs often focus on Groups (Sites) rather than Templates.
@@ -131,8 +131,6 @@ curl -u "admin:prod_pass" \
      -X POST "http://prod-server/o/site-template-ci/v1/site-templates/import?templateName=MyTemplate&createIfMissing=true&force=true" \
      --data-binary @my-template.lar \
      -H "Content-Type: application/octet-stream"
-
-```
 
 ```
 
